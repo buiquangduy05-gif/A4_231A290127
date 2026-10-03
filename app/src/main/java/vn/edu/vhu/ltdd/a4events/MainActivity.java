@@ -18,8 +18,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    // TODO: thay 2201234567 bằng MSSV của bạn
-    private static final String TAG = "A4_2201234567";
+    private static final String TAG = "A231A290127";
 
     private EditText edtSoA, edtSoB, edtCanNang, edtChieuCao;
     private TextView tvKetQua, tvBmi, tvPhanLoai;
