@@ -68,6 +68,32 @@ public class MainActivity extends AppCompatActivity {
 
         btnXoa.setOnClickListener(v -> xoaTrang());
         btnTinhBmi.setOnClickListener(v -> tinhBmi());
+        Button btnDaoDau = findViewById(R.id.btnDaoDau);
+        Button btnPhanTram = findViewById(R.id.btnPhanTram);
+
+        View.OnClickListener listenerDon = v -> {
+            // Xác định xem người dùng đang nhấp nháy con trỏ ở ô nào
+            EditText edtDangChon = edtSoA.hasFocus() ? edtSoA : (edtSoB.hasFocus() ? edtSoB : null);
+            if (edtDangChon == null || edtDangChon.getText().toString().isEmpty()) return;
+
+            try {
+                double so = Double.parseDouble(edtDangChon.getText().toString());
+                if (v.getId() == R.id.btnDaoDau) {
+                    so = so * -1; // Theo đúng gợi ý: nhân -1
+                } else if (v.getId() == R.id.btnPhanTram) {
+                    so = so / 100.0;
+                }
+                // Ghi lại vào ô nhập
+                edtDangChon.setText(String.valueOf(so));
+                // Di chuyển con trỏ về cuối chữ số
+                edtDangChon.setSelection(edtDangChon.getText().length());
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Vui lòng nhập đúng số", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        btnDaoDau.setOnClickListener(listenerDon);
+        btnPhanTram.setOnClickListener(listenerDon);
     }
 
     // =============== MÁY TÍNH ===============
