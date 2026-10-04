@@ -14,6 +14,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,6 +23,10 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText edtSoA, edtSoB, edtCanNang, edtChieuCao;
     private TextView tvKetQua, tvBmi, tvPhanLoai;
+
+    // Khai báo biến cho Bài NC2 (Lịch sử)
+    private TextView tvLichSu;
+    private ArrayList<String> danhSachLichSu = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +48,19 @@ public class MainActivity extends AppCompatActivity {
         tvBmi = findViewById(R.id.tvBmi);
         tvPhanLoai = findViewById(R.id.tvPhanLoai);
 
+        // Ánh xạ view cho Bài NC2
+        tvLichSu = findViewById(R.id.tvLichSu);
+
         Button btnCong = findViewById(R.id.btnCong);
         Button btnTru = findViewById(R.id.btnTru);
         Button btnNhan = findViewById(R.id.btnNhan);
         Button btnChia = findViewById(R.id.btnChia);
         Button btnXoa = findViewById(R.id.btnXoa);
         Button btnTinhBmi = findViewById(R.id.btnTinhBmi);
+
+        // Ánh xạ view cho Bài NC1
+        Button btnDaoDau = findViewById(R.id.btnDaoDau);
+        Button btnPhanTram = findViewById(R.id.btnPhanTram);
 
         // ---- Cách 1: mỗi nút một listener bằng biểu thức lambda ----
         btnCong.setOnClickListener(v -> tinhToan('+'));
@@ -68,30 +80,26 @@ public class MainActivity extends AppCompatActivity {
 
         btnXoa.setOnClickListener(v -> xoaTrang());
         btnTinhBmi.setOnClickListener(v -> tinhBmi());
-        Button btnDaoDau = findViewById(R.id.btnDaoDau);
-        Button btnPhanTram = findViewById(R.id.btnPhanTram);
 
+        // ================= XỬ LÝ BÀI NC1 (± và %) =================
         View.OnClickListener listenerDon = v -> {
-            // Xác định xem người dùng đang nhấp nháy con trỏ ở ô nào
+            // Xem con trỏ đang ở ô A hay ô B
             EditText edtDangChon = edtSoA.hasFocus() ? edtSoA : (edtSoB.hasFocus() ? edtSoB : null);
             if (edtDangChon == null || edtDangChon.getText().toString().isEmpty()) return;
 
             try {
                 double so = Double.parseDouble(edtDangChon.getText().toString());
                 if (v.getId() == R.id.btnDaoDau) {
-                    so = so * -1; // Theo đúng gợi ý: nhân -1
+                    so = so * -1;
                 } else if (v.getId() == R.id.btnPhanTram) {
                     so = so / 100.0;
                 }
-                // Ghi lại vào ô nhập
                 edtDangChon.setText(String.valueOf(so));
-                // Di chuyển con trỏ về cuối chữ số
                 edtDangChon.setSelection(edtDangChon.getText().length());
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "Vui lòng nhập đúng số", Toast.LENGTH_SHORT).show();
             }
         };
-
         btnDaoDau.setOnClickListener(listenerDon);
         btnPhanTram.setOnClickListener(listenerDon);
     }
@@ -102,7 +110,6 @@ public class MainActivity extends AppCompatActivity {
         String chuoiA = edtSoA.getText().toString().trim();
         String chuoiB = edtSoB.getText().toString().trim();
 
-        // Bước 1: kiểm tra rỗng và báo lỗi ngay trên ô nhập
         if (chuoiA.isEmpty()) {
             edtSoA.setError(getString(R.string.err_empty));
             edtSoA.requestFocus();
@@ -114,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Bước 2: chuyển chuỗi sang số, bẫy lỗi định dạng
         double a, b;
         try {
             a = Double.parseDouble(chuoiA);
@@ -125,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Bước 3: xử lý trường hợp đặc biệt
         if (phepToan == '/' && b == 0) {
             edtSoB.setError(getString(R.string.err_divide_zero));
             Toast.makeText(this, R.string.err_divide_zero, Toast.LENGTH_SHORT).show();
@@ -140,9 +145,16 @@ public class MainActivity extends AppCompatActivity {
             default:  ketQua = a / b; break;
         }
 
-        tvKetQua.setText(String.format(Locale.getDefault(), "%.2f %c %.2f = %.2f",
-                a, phepToan, b, ketQua));
+        tvKetQua.setText(String.format(Locale.getDefault(), "%.2f %c %.2f = %.2f", a, phepToan, b, ketQua));
         Log.d(TAG, "Phép tính: " + a + " " + phepToan + " " + b + " = " + ketQua);
+
+        // ================= XỬ LÝ LƯU LỊCH SỬ (BÀI NC2) =================
+        String phepTinh = String.format(Locale.getDefault(), "%.2f %c %.2f = %.2f", a, phepToan, b, ketQua);
+        danhSachLichSu.add(0, phepTinh); // Thêm lên đầu danh sách
+        if (danhSachLichSu.size() > 5) {
+            danhSachLichSu.remove(5); // Xóa bớt nếu quá 5
+        }
+        hienThiLichSu();
     }
 
     private void xoaTrang() {
@@ -152,6 +164,34 @@ public class MainActivity extends AppCompatActivity {
         edtSoB.setError(null);
         tvKetQua.setText(R.string.result_placeholder);
         edtSoA.requestFocus();
+    }
+
+    // Hàm hiển thị lịch sử (Bài NC2)
+    private void hienThiLichSu() {
+        StringBuilder sb = new StringBuilder();
+        for (String s : danhSachLichSu) {
+            sb.append(s).append("\n");
+        }
+        tvLichSu.setText(sb.toString());
+    }
+
+    // Xử lý xoay màn hình không mất dữ liệu (Bài NC2)
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList("LICH_SU", danhSachLichSu);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            ArrayList<String> savedList = savedInstanceState.getStringArrayList("LICH_SU");
+            if (savedList != null) {
+                danhSachLichSu = savedList;
+                hienThiLichSu();
+            }
+        }
     }
 
     // =============== BMI ===============
@@ -165,7 +205,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, R.string.err_positive, Toast.LENGTH_SHORT).show();
                 return;
             }
-            // Cho phép nhập 1.70 (mét) hoặc 170 (cm)
             if (chieuCao > 3) {
                 chieuCao = chieuCao / 100.0;
             }
@@ -179,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Ngưỡng theo khuyến nghị của WHO cho khu vực châu Á. */
     private String phanLoai(double bmi) {
         if (bmi < 18.5) return getString(R.string.bmi_under);
         if (bmi < 23) return getString(R.string.bmi_normal);
